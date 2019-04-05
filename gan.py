@@ -99,8 +99,7 @@ def discriminator(input_shape,
     layer = Conv2D(
         filters=filters, 
         kernel_size=kernel_size, 
-        strides=(2,2), 
-        padding='same'
+        strides=(2,2)
     )(input_)
 
     for i in range(1, nlayers):
@@ -108,8 +107,7 @@ def discriminator(input_shape,
         conv = Conv2D(
             filters=filters * (2 ** i), 
             kernel_size=kernel_size, 
-            strides=(2,2), 
-            padding='same'
+            strides=(2,2)
         )(relu)
         layer = BatchNormalization()(conv)
 
