@@ -229,8 +229,7 @@ if __name__ == '__main__':
             D_loss += .5 * D.train_on_batch(imgs, y2)
 
             z = np.random.normal(size=(len(x), z_shape[0]))
-            preds = D.predict_on_batch(imgs)
-            gan_loss += gan.train_on_batch(z, preds)
+            gan_loss += gan.train_on_batch(z, np.ones(len(z)))
 
             count += 1
 
