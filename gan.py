@@ -10,7 +10,7 @@ from keras.layers import (
     Dropout, 
     BatchNormalization, 
     LeakyReLU, 
-    Deconv2D, 
+    UpSampling2D, 
     Conv2D, 
     Flatten
 )
@@ -66,23 +66,34 @@ def generator(input_shape,
             layer = Dropout(drop_rate)(layer, training=True)
         batch_norm = BatchNormalization()(layer)
         relu = LeakyReLU(alpha=.2)(batch_norm)
-        layer = Deconv2D(
+
+        #avoid checkerboard pattern
+        #https://distill.pub/2016/deconv-checkerboard/
+        upsamp = UpSampling2D(
+            size=2, 
+            interpolation='nearest'
+        )(relu)
+        layer = Conv2D(
             filters=filters // (2 ** i), 
             kernel_size=kernel_size, 
-            strides=(2,2), 
+            strides=(1,1), 
             padding='same'
-        )(relu)
+        )(upsamp)
 
     relu = LeakyReLU(alpha=.2)(layer)
-    deconv = Deconv2D(
+    upsamp = UpSampling2D(
+        size=2, 
+        interpolation='nearest'
+    )(relu)
+    conv = Conv2D(
         filters=3, 
         kernel_size=kernel_size, 
-        strides=(2,2), 
+        strides=(1,1), 
         padding='same', 
         activation='tanh'
-    )(relu)
+    )(upsamp)
 
-    model = Model(input_, deconv)
+    model = Model(input_, conv)
     if ngpus > 0:
         model = multi_gpu_model(model, gpus=ngpus)
 
