@@ -123,14 +123,16 @@ def discriminator(input_shape,
         layer = BatchNormalization()(conv)
 
     flat = Flatten()(layer)
-    relu = LeakyReLU(alpha=.2)(flat)
-    dense = Dense(1, activation='sigmoid')(relu)
+    feats = LeakyReLU(alpha=.2)(flat)
+    dense = Dense(1, activation='sigmoid')(feats)
 
-    model = Model(input_, dense)
+    model1 = Model(input_, dense)
+    model2 = Model(input_, feats)
     if ngpus > 0:
-        model = multi_gpu_model(model, gpus=ngpus)
+        model1 = multi_gpu_model(model1, gpus=ngpus)
+        model2 = multi_gpu_model(model2, gpus=ngpus)
 
-    return model
+    return model1, model2
 
 
 def loss(label, pred):
@@ -164,29 +166,29 @@ if __name__ == '__main__':
         kernel_size, 
         ngpus
     )
-    D = discriminator(
+    D1, D2 = discriminator(
         img_shape, 
         filters, 
         kernel_size, 
         nlayers, 
         ngpus
     )
-    D.compile(
+    D1.compile(
         loss='mse', 
         optimizer='sgd'
     )
-    D.trainable = False
+    D1.trainable = False
 
     z = Input(z_shape)
     img = G(z)
-    valid = D(img)
-    gan = Model(z, valid)
+    feats = D2(img)
+    gan = Model(z, feats)
     adam = Adam(
         lr=.0002, 
         beta_1=.5
     )
     gan.compile(
-        loss=loss, 
+        loss='mse', 
         optimizer=adam
     )
 
@@ -204,7 +206,7 @@ if __name__ == '__main__':
 
         while has_next:
             x = []
-            for j in range(batch_size // 2):
+            for j in range(batch_size):
                 img = next(load_data_inst, None)
                 if img is None:
                     has_next = False
@@ -215,7 +217,7 @@ if __name__ == '__main__':
                 break
             x = np.array(x)
 
-            z = np.random.normal(size=(len(x), z_shape[0]))
+            z = np.random.normal(size=(len(x) // 2, z_shape[0]))
             imgs = G.predict_on_batch(z)
 
             #add image noise w/o changing padding
@@ -225,7 +227,7 @@ if __name__ == '__main__':
 
             #one-sided soft labels
             c = .2
-            y1 = np.random.uniform(low=1 - c / 2, high=1 + c / 2, size=len(x))
+            y1 = np.random.uniform(low=1 - c / 2, high=1 + c / 2, size=len(x) // 2)
             y2 = np.zeros(len(imgs))
 
             #swap labels
@@ -234,11 +236,12 @@ if __name__ == '__main__':
             y1[idxs] = y2[idxs]
             y2[idxs] = tmp
 
-            D_loss += .5 * D.train_on_batch(x, y1)
-            D_loss += .5 * D.train_on_batch(imgs, y2)
+            D_loss += .5 * D1.train_on_batch(x[:len(x) // 2], y1)
+            D_loss += .5 * D1.train_on_batch(imgs, y2)
 
             z = np.random.normal(size=(batch_size, z_shape[0]))
-            gan_loss += gan.train_on_batch(z, np.ones(len(z)))
+            feats = D2.predict_on_batch(x)
+            gan_loss += gan.train_on_batch(z, feats)
 
             count += 1
 
