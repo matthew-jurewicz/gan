@@ -143,9 +143,9 @@ if __name__ == '__main__':
     img_shape = (128,128,3)
     z_shape = (100,)
     nlayers = 4
-    filters = 128
+    filters = 256
     drop_rate = .5
-    kernel_size = 5
+    kernel_size = 3
     ngpus = 0
 
     G = generator(
@@ -217,15 +217,15 @@ if __name__ == '__main__':
             imgs *= np.random.uniform(low=1 - noise, high=1, size=imgs.shape)
 
             #one-sided soft labels
-            c = .2
+            c = .1
             y1 = np.random.uniform(low=1 - c, high=1, size=len(x) // 2)
             y2 = np.zeros(len(imgs))
 
             #swap labels
-            idxs = np.random.choice(len(y1), size=int(.1 * len(y1)), replace=False)
-            tmp = y1[idxs]
-            y1[idxs] = y2[idxs]
-            y2[idxs] = tmp
+            # idxs = np.random.choice(len(y1), size=int(.05 * len(y1)), replace=False)
+            # tmp = y1[idxs]
+            # y1[idxs] = y2[idxs]
+            # y2[idxs] = tmp
 
             D_loss += .5 * D1.train_on_batch(x[:len(x) // 2], y1)
             D_loss += .5 * D1.train_on_batch(imgs, y2)
