@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
             #one-sided soft labels
             c = .2
-            y1 = np.random.uniform(low=1 - c / 2, high=1 + c / 2, size=len(x) // 2)
+            y1 = np.random.uniform(low=1 - c, high=1, size=len(x) // 2)
             y2 = np.zeros(len(imgs))
 
             #swap labels
@@ -239,7 +239,7 @@ if __name__ == '__main__':
             D_loss += .5 * D1.train_on_batch(x[:len(x) // 2], y1)
             D_loss += .5 * D1.train_on_batch(imgs, y2)
 
-            z = np.random.normal(size=(batch_size, z_shape[0]))
+            z = np.random.normal(size=(len(x), z_shape[0]))
             feats = D2.predict_on_batch(x)
             gan_loss += gan.train_on_batch(z, feats)
 
