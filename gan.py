@@ -148,15 +148,6 @@ if __name__ == '__main__':
     kernel_size = 5
     ngpus = 0
 
-    # while True:
-    #     img = next(load_data(img_shape))
-    #     img = (img / 2 + .5) * 255
-    #     img = img.astype(np.uint8)
-
-    #     plt.imshow(img)
-    #     plt.pause(.001)
-    #     input('')
-
     G = generator(
         z_shape, 
         img_shape, 
