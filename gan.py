@@ -142,9 +142,9 @@ def loss(label, pred):
 if __name__ == '__main__':
     img_shape = (128,128,3)
     z_shape = (100,)
-    nlayers = 4
-    filters = 256
-    drop_rate = .5
+    nlayers = 5
+    filters = 128
+    drop_rate = .25
     kernel_size = 3
     ngpus = 0
 
